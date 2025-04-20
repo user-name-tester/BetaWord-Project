@@ -370,6 +370,7 @@ async function loadDocument(id) {
   }
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
   initQuill();
   initZoom();
@@ -381,4 +382,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('home-tab').addEventListener('click', () => switchTab('home'));
   document.getElementById('insert-tab').addEventListener('click', () => switchTab('insert'));
+
+
+  async function analyzeText() {
+    if (!quill) {
+        document.getElementById('analysis-result').innerText = 'Editor no inicializado.';
+        return;
+    }
+    const text = quill.getText().trim();
+    if (!text) {
+        document.getElementById('analysis-result').innerText = 'No hay texto para analizar.';
+        return;
+    }
+    try {
+        const model = await use.load();
+        const embeddings = await model.embed([text]);
+        const result = await classifyTone(embeddings);
+        document.getElementById('analysis-result').innerText = 
+            `Tono: ${result.tone} (Confianza: ${(result.confidence * 100).toFixed(2)}%)`;
+    } catch (error) {
+        console.error('Error en análisis:', error);
+        document.getElementById('analysis-result').innerText = 'Error al analizar el texto.';
+    }
+}
+
+async function classifyTone(embeddings) {
+    const positiveWords = ['awesome', 'great', 'collab', 'happy', 'excellent'];
+    const negativeWords = ['bug', 'crash', 'fail', 'error', 'sad'];
+    const text = quill.getText().toLowerCase();
+    const positiveCount = positiveWords.filter(w => text.includes(w)).length;
+    const negativeCount = negativeWords.filter(w => text.includes(w)).length;
+    const total = positiveCount + negativeCount || 1; // Evitar división por 0
+    const score = (positiveCount - negativeCount) / total;
+    const confidence = Math.min(Math.abs(score) * 2, 1); // Escala a 0-1
+    if (score > 0.3) return { tone: "positive", confidence };
+    if (score < -0.3) return { tone: "negative", confidence };
+    return { tone: "neutral", confidence };
+}
 });

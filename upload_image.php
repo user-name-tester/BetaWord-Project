@@ -8,7 +8,22 @@ if (!isset($_FILES['image'])) {
 }
 
 $file = $_FILES['image'];
-$uploadDir = 'uploads/';
+$allowedTypes = ['image/jpeg', 'image/png'];
+$maxSize = 5 * 1024 * 1024; // 5MB
+
+// Verificar tipo y tamaño
+if (!in_array($file['type'], $allowedTypes) || $file['size'] > $maxSize) {
+    echo json_encode(['error' => 'Solo imágenes JPEG/PNG ≤5MB']);
+    exit;
+}
+
+// Verificar que es una imagen válida
+if (!getimagesize($file['tmp_name'])) {
+    echo json_encode(['error' => 'El archivo no es una imagen válida']);
+    exit;
+}
+
+$uploadDir = 'Uploads/';
 if (!file_exists($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }

@@ -13,6 +13,9 @@ try {
         throw new Exception("El contenido no puede estar vacío.");
     }
 
+    $content = mysqli_real_escape_string($conn, $content);
+    $title = mysqli_real_escape_string($conn, $title);
+
     $sql = "INSERT INTO documents (title, content) VALUES (?, ?)";
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
@@ -21,7 +24,7 @@ try {
 
     $stmt->bind_param("ss", $title, $content);
     if (!$stmt->execute()) {
-        throw new Exception("Error al ejecutar la consulta: " + $stmt->error);
+        throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
     }
 
     echo json_encode(['message' => 'Documento guardado exitosamente.']);
