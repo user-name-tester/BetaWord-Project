@@ -116,18 +116,24 @@ async function insertImage() {
 async function uploadImage(file) {
   const formData = new FormData();
   formData.append('image', file);
+
   try {
-    const response = await fetch('./upload_image.php', {
-      method: 'POST',
-      body: formData
-    });
-    if (!response.ok) throw new Error('Error al subir la imagen');
-    const result = await response.json();
-    return result.url || null;
+      const response = await fetch('./upload_image.php', {
+          method: 'POST',
+          body: formData
+      });
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.error) {
+          throw new Error(result.error);
+      }
+      return result.url;
   } catch (error) {
-    console.error('Error uploading image:', error);
-    document.getElementById('analysis-result').innerText = 'Error al subir la imagen.';
-    return null;
+      console.error('Error uploading image:', error);
+      document.getElementById('analysis-result').innerText = 'Error al subir la imagen. Verifica la consola.';
+      return null;
   }
 }
 
@@ -339,20 +345,34 @@ async function saveDocument() {
 
 async function loadDocuments() {
   try {
-    const response = await fetch('./list_documents.php');
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const documents = await response.json();
-    if (documents.error) throw new Error(documents.error);
-    const listDiv = document.getElementById('document-list');
-    if (documents.length === 0) {
-      listDiv.innerHTML = '<p>No hay documentos guardados.</p>';
-    } else {
-      listDiv.innerHTML = documents.map(doc => `<p style="cursor: pointer;" onclick="loadDocument(${doc.id}); document.getElementById('document-modal').style.display = 'none'">${doc.title}: ${doc.content.slice(0, 50)}...</p>`).join('');
-    }
-    document.getElementById('document-modal').style.display = 'block';
+      const response = await fetch('./list_documents.php');
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const documents = await response.json();
+      if (documents.error) {
+          throw new Error(documents.error);
+      }
+      const listDiv = document.getElementById('document-list');
+      listDiv.innerHTML = documents.map(doc => 
+          `<p onclick="loadDocument(${doc.id})">${doc.title}</p>`
+      ).join('');
+      const modal = document.getElementById('document-modal');
+      if (modal) {
+          modal.style.display = 'block';
+      } else {
+          throw new Error('Modal element not found.');
+      }
   } catch (error) {
-    console.error('Error al cargar documentos:', error);
-    document.getElementById('analysis-result').innerText = 'Error al cargar documentos: ' + error.message;
+      console.error('Error loading documents:', error);
+      document.getElementById('analysis-result').innerText = 'Error al cargar documentos.';
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById('document-modal');
+  if (modal) {
+      modal.style.display = 'none';
   }
 }
 
@@ -384,39 +404,44 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('insert-tab').addEventListener('click', () => switchTab('insert'));
 
 
-  async function analyzeText() {
-    if (!quill) {
-        document.getElementById('analysis-result').innerText = 'Editor no inicializado.';
-        return;
-    }
-    const text = quill.getText().trim();
-    if (!text) {
-        document.getElementById('analysis-result').innerText = 'No hay texto para analizar.';
-        return;
-    }
-    try {
-        const model = await use.load();
-        const embeddings = await model.embed([text]);
-        const result = await classifyTone(embeddings);
-        document.getElementById('analysis-result').innerText = 
-            `Tono: ${result.tone} (Confianza: ${(result.confidence * 100).toFixed(2)}%)`;
-    } catch (error) {
-        console.error('Error en análisis:', error);
-        document.getElementById('analysis-result').innerText = 'Error al analizar el texto.';
-    }
+// En script.js
+async function analyzeTextTone() {
+  if (!quill || !model) {
+      document.getElementById('analysis-result').innerText = 'Modelo o editor no cargado.';
+      return;
+  }
+  const text = quill.getText().trim();
+  if (!text) {
+      document.getElementById('analysis-result').innerText = 'No hay texto para analizar.';
+      return;
+  }
+  try {
+      const embeddings = await model.embed([text]);
+      const result = await classifyTone(embeddings);
+      document.getElementById('analysis-result').innerText = 
+          `Tono: ${result.tone} (Confianza: ${(result.confidence * 100).toFixed(2)}%)`;
+  } catch (error) {
+      console.error('Error en análisis de tono:', error);
+      document.getElementById('analysis-result').innerText = 'Error al analizar el tono.';
+  }
 }
 
 async function classifyTone(embeddings) {
-    const positiveWords = ['awesome', 'great', 'collab', 'happy', 'excellent'];
-    const negativeWords = ['bug', 'crash', 'fail', 'error', 'sad'];
-    const text = quill.getText().toLowerCase();
-    const positiveCount = positiveWords.filter(w => text.includes(w)).length;
-    const negativeCount = negativeWords.filter(w => text.includes(w)).length;
-    const total = positiveCount + negativeCount || 1; // Evitar división por 0
-    const score = (positiveCount - negativeCount) / total;
-    const confidence = Math.min(Math.abs(score) * 2, 1); // Escala a 0-1
-    if (score > 0.3) return { tone: "positive", confidence };
-    if (score < -0.3) return { tone: "negative", confidence };
-    return { tone: "neutral", confidence };
+  const positiveRefs = await model.embed(["excelente", "bueno", "feliz"]);
+  const negativeRefs = await model.embed(["malo", "triste", "error"]);
+  const posSimilarity = cosineSimilarity(embeddings, positiveRefs);
+  const negSimilarity = cosineSimilarity(embeddings, negativeRefs);
+  const confidence = Math.abs(posSimilarity - negSimilarity);
+  return { 
+      tone: posSimilarity > negSimilarity ? "positive" : "negative", 
+      confidence 
+  };
+}
+
+function cosineSimilarity(vecA, vecB) {
+  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+  return dotProduct / (magnitudeA * magnitudeB);
 }
 });

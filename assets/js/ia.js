@@ -1,32 +1,34 @@
-// assets/js/ai.js
-tf.setBackend('webgl');
-
+// ia.js
 let model = null;
 
 async function loadTextAnalyzer() {
   try {
-    console.log('Cargando modelo de análisis de texto...');
+    tf.setBackend('webgl');
     model = await use.load();
-    console.log('Modelo USE cargado exitosamente.');
-  } catch (error) {
-    console.error('Error al cargar el modelo:', error);
-    document.getElementById('analysis-result').innerText = 'Error al cargar el modelo. Revisa la consola.';
+    console.log('Modelo USE cargado correctamente');
+  } catch (err) {
+    console.error('Error cargando el modelo de IA:', err);
   }
 }
 
 function splitIntoSentences(text) {
-  return text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  return text.split(/(?<=[.?!])\s+/).filter(Boolean);
 }
 
 async function analyzeText() {
   if (!model) {
-    document.getElementById('analysis-result').innerText = 'El modelo de IA no está cargado. Por favor, espera.';
+    document.getElementById('analysis-result').innerText = 'El modelo de IA no está cargado.';
     return;
   }
 
-  const text = document.getElementById('editor').innerText;
-  if (!text.trim()) {
-    document.getElementById('analysis-result').innerText = 'El editor está vacío. Escribe algo para analizar.';
+  if (!window.quill) {
+    document.getElementById('analysis-result').innerText = 'El editor Quill no está inicializado.';
+    return;
+  }
+
+  const text = quill.getText().trim();
+  if (!text) {
+    document.getElementById('analysis-result').innerText = 'El editor está vacío.';
     return;
   }
 
@@ -40,25 +42,31 @@ async function analyzeText() {
     const embeddings = await model.embed(sentences);
     const embeddingsArray = await embeddings.array();
 
-    let result = 'Análisis de texto:\n';
+    let similarities = [];
     if (sentences.length > 1) {
-      result += 'Similitud semántica entre oraciones:\n';
       for (let i = 0; i < embeddingsArray.length - 1; i++) {
-        const similarity = tf.dot(
-          tf.tensor(embeddingsArray[i]),
-          tf.tensor(embeddingsArray[i + 1])
-        ).dataSync()[0];
-        result += `Oración ${i + 1} vs. Oración ${i + 2}: ${similarity.toFixed(2)}\n`;
+        const sim = cosineSimilarity(embeddingsArray[i], embeddingsArray[i + 1]);
+        similarities.push(sim.toFixed(2));
       }
-    } else {
-      result += 'Solo se detectó una oración. Embedding generado: ' + embeddingsArray[0].slice(0, 5) + '...';
     }
 
-    document.getElementById('analysis-result').innerText = result;
-  } catch (error) {
-    console.error('Error al analizar el texto:', error);
-    document.getElementById('analysis-result').innerText = 'Error al analizar el texto. Revisa la consola.';
+    const toneResult = await classifyTone(embeddings);
+    const result = {
+      tone: toneResult.tone,
+      confidence: toneResult.confidence,
+      semantic_similarities: similarities
+    };
+
+    document.getElementById('analysis-result').innerText = JSON.stringify(result, null, 2);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('analysis-result').innerText = 'Error al analizar el texto.';
   }
 }
 
-loadTextAnalyzer();
+function cosineSimilarity(vecA, vecB) {
+  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+  return dotProduct / (magnitudeA * magnitudeB);
+}
