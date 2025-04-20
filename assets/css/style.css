@@ -1,0 +1,180 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+    margin: 0;
+  }
+  
+  #editor-container {
+    min-height: calc(100vh - 160px);
+  }
+  
+  .ql-editor {
+    min-height: 11in;
+    padding: 1in;
+    margin: 1rem auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    width: 8.5in;
+    color: black;
+  }
+  
+  .ql-editor img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .ql-editor .ql-video {
+    width: 100%;
+    height: 315px;
+    border: none;
+    resize: both;
+    overflow: auto;
+    min-width: 200px;
+    min-height: 150px;
+  }
+  
+  .ql-container.ql-snow {
+    border: none;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown button {
+    height: 2rem;
+    line-height: 2rem;
+    box-sizing: border-box;
+  }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    margin-top: 2px;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    border-radius: 4px;
+    padding: 8px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+  
+  .dropdown-content.bg-blur-black {
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+  
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 10000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+  }
+  
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .fix {
+    position: fixed;
+  }
+  
+  .bg-blur {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    top: 36px;
+    z-index: 999;
+  }
+  
+  .bg-blur-black {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    top: 0;
+    z-index: 1000;
+  }
+  
+  @supports not (backdrop-filter: blur(10px)) {
+    .bg-blur, .bg-blur-black, .dropdown-content, .dropdown-content.bg-blur-black {
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+  }
+  
+  #analysis-result {
+    width: 80%;
+    margin: 1rem auto;
+  }
+  
+  #document-modal p:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .ql-font-calibri { font-family: 'Calibri', sans-serif; }
+  .ql-font-arial { font-family: 'Arial', sans-serif; }
+  .ql-font-courier { font-family: 'Courier New', monospace; }
+  .ql-font-georgia { font-family: 'Georgia', serif; }
+  .ql-font-times { font-family: 'Times New Roman', serif; }
+  .ql-font-verdana { font-family: 'Verdana', sans-serif; }
+  
+  .ql-editor ul {
+    list-style: disc !important;
+    color: black !important;
+    margin-left: 2em;
+  }
+  
+  .ql-editor ol {
+    list-style: decimal !important;
+    color: black !important;
+    margin-left: 2em;
+  }
+  
+  .ql-editor li::marker {
+    color: black !important;
+  }
+  
+  .page-break {
+    border-top: 1px dashed #ccc;
+    margin: 10px 0;
+  }
+  
+  table {
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  
+  table td {
+    border: 1px solid #ccc;
+    padding: 5px;
+  }
