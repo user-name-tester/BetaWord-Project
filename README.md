@@ -28,6 +28,12 @@ Analiza el contenido del documento dividiéndolo en oraciones, genera embeddings
 ### `analyzeTextTone()` (desde `script.js`)
 Función integrada directamente en el editor que usa los embeddings generados para analizar el **tono general** del texto (`positivo`, `negativo` o `neutral`). Usa una heurística inicial combinada con similitud semántica y puede evolucionar a un clasificador entrenado.
 
+## 📊 Rendimiento de Análisis de Tono
+- **Función**: `classifyTone()`
+- **Dataset de prueba**: 100 frases en español (40 positivas, 40 negativas, 20 neutrales).
+- **Precisión**: [A rellenar con los resultados, ej. 85%]
+- **Velocidad**: [A rellenar con los resultados, ej. 150ms por frase en promedio]
+
 ## 📦 Instalación local (modo desarrollador)
 
 ### 1. Clonar el repositorio
@@ -52,12 +58,20 @@ DB_NAME=betaword_db
 
 ### 4. Configurar la base de datos
 - Importa el archivo `db_setup.php` en tu servidor local (ej: XAMPP, WAMP, etc.).
-- Asegúrate de tener permisos de escritura en la carpeta `/uploads/`.
+- Asegúrate de tener permisos de escritura en la carpeta `/uploads/`:
+```bash
+chmod 755 uploads/
+```
 
 ### 5. Ejecutar en el navegador
 Abre `index.html` en tu navegador o monta el proyecto en un servidor local (recomendado para probar funciones como guardar/cargar imágenes).
 
 ---
+
+## 📅 Roadmap
+- [ ] Colaboración en tiempo real (WebSockets).  
+- [ ] Soporte para Markdown/LaTeX.  
+- [ ] Plugin para ChatGPT/Grok directamente en el editor.  
 
 ## 📄 Licencia
 
@@ -73,7 +87,7 @@ of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction...
 ```
 
-## 🤝 Contribuciones
+## 👥 Contribuciones
 
 BetaWord da la bienvenida a contribuciones de cualquier ser humano o IA interesada en crear tecnología ética. Puedes contribuir con:
 - Mejoras en UI o accesibilidad.
